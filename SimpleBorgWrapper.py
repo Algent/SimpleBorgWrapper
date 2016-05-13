@@ -83,7 +83,7 @@ def main():
     report_from = report_from.replace('%%SRVNAME%%', server_name, 1)
     report_subject = report_subject.replace('%%ENDRESULT%%', get_rc_result(wrapper_rc), 1)
     report_subject = report_subject.replace('%%SRVNAME%%', server_name, 1)
-    send_report(report_from, shlex.split(report_to.replace(', ', ' ')), report_subject, report_body, report_smtp)
+    send_report(report_from, report_to, report_subject, report_body, report_smtp)
     # ## END REPORT ##
 
     # ### END MAIN ### #
