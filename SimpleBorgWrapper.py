@@ -192,7 +192,7 @@ def send_report(msg_from, msg_to, msg_subject, msg_body, msg_smtp):
     msg_body = MIMEText(msg_body, 'html')
     msg.attach(msg_body)
     s = smtplib.SMTP(msg_smtp)
-    s.sendmail(msg_from, msg_to, msg.as_string())
+    s.sendmail(msg_from, shlex.split(msg_to.replace(', ', ' ')), msg.as_string())
     s.quit()
 
 
