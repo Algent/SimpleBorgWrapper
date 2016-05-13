@@ -12,6 +12,7 @@ from time import strftime, time, gmtime
 from subprocess import Popen, PIPE
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from email.utils import formatdate
 
 
 def main():
@@ -63,6 +64,8 @@ def main():
     # ## END BACKUP ##
 
     # ## BEGIN REPORT ##
+    # TODO Add option to disable reports
+    # TODO Add fulltext
     with open('SimpleBorgWrapper-report.html', 'r') as report_body_template:
         report_body = report_body_template.read()
     report_body = report_body.replace('%%SRVNAME%%', server_name)
@@ -80,7 +83,7 @@ def main():
     report_from = report_from.replace('%%SRVNAME%%', server_name, 1)
     report_subject = report_subject.replace('%%ENDRESULT%%', get_rc_result(wrapper_rc), 1)
     report_subject = report_subject.replace('%%SRVNAME%%', server_name, 1)
-    send_report(report_from, report_to, report_subject, report_body, report_smtp)
+    send_report(report_from, shlex.split(report_to.replace(', ', ' ')), report_subject, report_body, report_smtp)
     # ## END REPORT ##
 
     # ### END MAIN ### #
@@ -185,6 +188,7 @@ def send_report(msg_from, msg_to, msg_subject, msg_body, msg_smtp):
     msg['From'] = msg_from
     msg['To'] = msg_to
     msg['Subject'] = msg_subject
+    msg['Date'] = formatdate(localtime=True)
     msg_body = MIMEText(msg_body, 'html')
     msg.attach(msg_body)
     s = smtplib.SMTP(msg_smtp)
