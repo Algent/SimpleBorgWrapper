@@ -17,6 +17,7 @@ from email.utils import formatdate
 
 def main():
     # ### START MAIN ### #
+
     script_dir = os.path.dirname(os.path.abspath(__file__)) + '/'
 
     # Read fonfiguration file
@@ -24,15 +25,6 @@ def main():
         quit('ERROR: Could not find SimpleBorgWrapper.ini')
     config = ConfigParser.ConfigParser()
     config.read(script_dir + 'SimpleBorgWrapper.ini')
-    borg_bin_path = config.get('Borg', 'borg_bin_path')
-    borg_repository = config.get('Borg', 'borg_repository')
-    borg_passphrase = config.get('Borg', 'borg_passphrase')
-    borg_prefix = config.get('Borg', 'borg_prefix')
-    borg_paths_to_archive = config.get('Borg', 'borg_paths_to_archive')
-    borg_create_args = config.get('Borg', 'borg_create_args')
-    borg_check_args = config.get('Borg', 'borg_check_args')
-    borg_prune_args = config.get('Borg', 'borg_prune_args')
-    report_enabled = config.getboolean('Reports', 'report_enable')
     server_name = config.get('Misc', 'server_name')
 
     # Starting logging
@@ -44,11 +36,15 @@ def main():
     time_started = strftime('%Y-%m-%d %H:%M:%S')
     stopwatch = time()
     log_info('Starting backup of ' + server_name)
-    os.environ['BORG_PASSPHRASE'] = borg_passphrase
-    create_rc = borg_create(borg_bin_path, borg_repository, borg_prefix, borg_create_args, borg_paths_to_archive)
-    check_rc = borg_check(borg_bin_path, borg_repository, borg_check_args)
-    prune_rc = borg_prune(borg_bin_path, borg_repository, borg_prefix, borg_prune_args)
-    list_rc = borg_list(borg_bin_path, borg_repository)
+    os.environ['BORG_PASSPHRASE'] = config.get('Borg', 'borg_passphrase')
+    create_rc = borg_create(config.get('Borg', 'borg_bin_path'), config.get('Borg', 'borg_repository'),
+                            config.get('Borg', 'borg_prefix'), config.get('Borg', 'borg_create_args'),
+                            config.get('Borg', 'borg_paths_to_archive'))
+    check_rc = borg_check(config.get('Borg', 'borg_bin_path'), config.get('Borg', 'borg_repository'),
+                          config.get('Borg', 'borg_check_args'))
+    prune_rc = borg_prune(config.get('Borg', 'borg_bin_path'), config.get('Borg', 'borg_repository'),
+                          config.get('Borg', 'borg_prefix'), config.get('Borg', 'borg_prune_args'))
+    list_rc = borg_list(config.get('Borg', 'borg_bin_path'), config.get('Borg', 'borg_repository'))
     os.environ['BORG_PASSPHRASE'] = ""
     log_info('End of backup with Status: ' + get_rc_result(wrapper_rc))
     time_ended = strftime('%Y-%m-%d %H:%M:%S')
@@ -57,7 +53,7 @@ def main():
 
     # ## BEGIN REPORT ##
     # TODO Add fulltext mail
-    if report_enabled:
+    if config.getboolean('Reports', 'report_enable'):
         if not os.path.isfile(script_dir + 'SimpleBorgWrapper-report.html'):
             quit('ERROR: Could not find SimpleBorgWrapper-report.html')
         log_info('Sending report...')
