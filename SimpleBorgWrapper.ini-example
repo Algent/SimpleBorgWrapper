@@ -11,6 +11,7 @@ borg_prune_args: -v -s -d 7 -w 4 -m 12
 [Logs]
 log_dir: /var/log/backup/
 log_filename: borgbackup.log
+log_nb_to_keep: 15
 
 [Reports]
 report_enable: true

@@ -36,7 +36,8 @@ def main():
     server_name = config.get('Misc', 'server_name')
 
     # Starting logging
-    init_logger(config.get('Logs', 'log_dir') + config.get('Logs', 'log_filename'))
+    init_logger(config.get('Logs', 'log_dir') + config.get('Logs', 'log_filename'),
+                config.getint('Logs', 'log_nb_to_keep'))
 
     # ## BEGIN BACKUP ##
     time_started_nice = strftime('%A %d %B %Y %H:%M:%S')
@@ -132,10 +133,10 @@ def borg_list(borg_bin, repo):
     return list_rc
 
 
-def init_logger(path):
+def init_logger(path, nb_to_keep):
     logger.setLevel(logging.INFO)
     formatter = logging.Formatter('%(asctime)s :: %(levelname)s :: %(message)s')
-    file_handler = TimedRotatingFileHandler(path, when='H', interval=12, backupCount=15)
+    file_handler = TimedRotatingFileHandler(path, when='H', interval=12, backupCount=nb_to_keep)
     file_handler.doRollover()
     file_handler.setLevel(logging.INFO)
     file_handler.setFormatter(formatter)
