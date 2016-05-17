@@ -17,16 +17,11 @@ from email.utils import formatdate
 
 def main():
     # ### START MAIN ### #
-
     script_dir = os.path.dirname(os.path.abspath(__file__)) + '/'
 
-    # Check for missing files
+    # Read fonfiguration file
     if not os.path.isfile(script_dir + 'SimpleBorgWrapper.ini'):
         quit('ERROR: Could not find SimpleBorgWrapper.ini')
-    if not os.path.isfile(script_dir + 'SimpleBorgWrapper-report.html'):
-        quit('ERROR: Could not find borg_report_tmpl.html')
-
-    # Read fonfiguration file
     config = ConfigParser.ConfigParser()
     config.read(script_dir + 'SimpleBorgWrapper.ini')
     borg_bin_path = config.get('Borg', 'borg_bin_path')
@@ -37,16 +32,11 @@ def main():
     borg_create_args = config.get('Borg', 'borg_create_args')
     borg_check_args = config.get('Borg', 'borg_check_args')
     borg_prune_args = config.get('Borg', 'borg_prune_args')
-    log_dir = config.get('Logs', 'log_dir')
-    log_filename = config.get('Logs', 'log_filename')
-    report_from = config.get('Reports', 'report_from')
-    report_to = config.get('Reports', 'report_to')
-    report_subject = config.get('Reports', 'report_subject')
-    report_smtp = config.get('Reports', 'report_smtp')
+    report_enabled = config.getboolean('Reports', 'report_enable')
     server_name = config.get('Misc', 'server_name')
 
     # Starting logging
-    init_logger(log_dir + log_filename)
+    init_logger(config.get('Logs', 'log_dir') + config.get('Logs', 'log_filename'))
 
     # ## BEGIN BACKUP ##
     time_started_nice = strftime('%A %d %B %Y %H:%M:%S')
@@ -60,32 +50,38 @@ def main():
     list_rc = borg_list(borg_bin_path, borg_repository)
     os.environ['BORG_PASSPHRASE'] = ""
     log_info('End of backup with Status: ' + get_rc_result(wrapper_rc))
-    log_info('Sending report...')
     time_ended = strftime('%Y-%m-%d %H:%M:%S')
     time_elapsed = round(time() - stopwatch, 2)
     # ## END BACKUP ##
 
     # ## BEGIN REPORT ##
-    # TODO Add option to disable reports
     # TODO Add fulltext mail
-    with open(script_dir + 'SimpleBorgWrapper-report.html', 'r') as report_body_template:
-        report_body = report_body_template.read()
-    report_body = report_body.replace('%%SRVNAME%%', server_name, 2)\
-        .replace('%%NICETIME%%', time_started_nice, 1)\
-        .replace('%%STARTTIME%%', time_started, 1)\
-        .replace('%%ENDTIME%%', time_ended, 1)\
-        .replace('%%DURATION%%', strftime('%H:%M:%S', gmtime(time_elapsed)), 1)\
-        .replace('%%ENDRESULT%%', get_rc_result(wrapper_rc), 2)\
-        .replace('%%BCREATE%%', get_rc_result(create_rc), 2)\
-        .replace('%%BCHECK%%', get_rc_result(check_rc), 2)\
-        .replace('%%BPRUNE%%', get_rc_result(prune_rc), 2)\
-        .replace('%%BLIST%%', get_rc_result(list_rc), 2)
-    # TODO Improve log formatting: Columns in output are a bit borked.
-    report_body = report_body.replace('%%FULL_LOG%%', live_log.replace('\n', '\n<br/>').replace(' ', '&nbsp;'))
-    report_from = report_from.replace('%%SRVNAME%%', server_name, 1)
-    report_subject = report_subject.replace('%%ENDRESULT%%', get_rc_result(wrapper_rc), 1)\
-        .replace('%%SRVNAME%%', server_name, 1)
-    send_report(report_from, report_to, report_subject, report_body, report_smtp)
+    if report_enabled:
+        if not os.path.isfile(script_dir + 'SimpleBorgWrapper-report.html'):
+            quit('ERROR: Could not find SimpleBorgWrapper-report.html')
+        log_info('Sending report...')
+        with open(script_dir + 'SimpleBorgWrapper-report.html', 'r') as report_body_template:
+            report_body = report_body_template.read()
+        # TODO Improve log formatting: Columns in email are a bit borked.
+        report_body = report_body.replace('%%SRVNAME%%', server_name, 2) \
+            .replace('%%NICETIME%%', time_started_nice, 1) \
+            .replace('%%STARTTIME%%', time_started, 1) \
+            .replace('%%ENDTIME%%', time_ended, 1) \
+            .replace('%%DURATION%%', strftime('%H:%M:%S', gmtime(time_elapsed)), 1) \
+            .replace('%%ENDRESULT%%', get_rc_result(wrapper_rc), 2) \
+            .replace('%%BCREATE%%', get_rc_result(create_rc), 2) \
+            .replace('%%BCHECK%%', get_rc_result(check_rc), 2) \
+            .replace('%%BPRUNE%%', get_rc_result(prune_rc), 2) \
+            .replace('%%BLIST%%', get_rc_result(list_rc), 2)\
+            .replace('%%FULL_LOG%%', live_log.replace('\n', '\n<br/>').replace(' ', '&nbsp;'))
+        report_from = config.get('Reports', 'report_from')\
+            .replace('%%SRVNAME%%', server_name, 1)
+        report_to = config.get('Reports', 'report_to')
+        report_subject = config.get('Reports', 'report_subject')\
+            .replace('%%ENDRESULT%%', get_rc_result(wrapper_rc), 1)\
+            .replace('%%SRVNAME%%', server_name, 1)
+        report_smtp = config.get('Reports', 'report_smtp')
+        send_report(report_from, report_to, report_subject, report_body, report_smtp)
     # ## END REPORT ##
 
     # ### END MAIN ### #

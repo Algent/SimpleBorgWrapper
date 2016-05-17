@@ -13,6 +13,7 @@ log_dir: /var/log/backup/
 log_filename: borgbackup.log
 
 [Reports]
+report_enable: true
 report_from: %%SRVNAME%% <email@example.com>
 report_to: email@example.com
 report_subject: Backup of %%SRVNAME%%: %%ENDRESULT%%
