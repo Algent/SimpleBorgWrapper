@@ -18,15 +18,17 @@ from email.utils import formatdate
 def main():
     # ### START MAIN ### #
 
+    script_dir = os.path.dirname(os.path.abspath(__file__)) + '/'
+
     # Check for missing files
-    if not os.path.isfile('SimpleBorgWrapper.ini'):
+    if not os.path.isfile(script_dir + 'SimpleBorgWrapper.ini'):
         quit('ERROR: Could not find SimpleBorgWrapper.ini')
-    if not os.path.isfile('SimpleBorgWrapper-report.html'):
+    if not os.path.isfile(script_dir + 'SimpleBorgWrapper-report.html'):
         quit('ERROR: Could not find borg_report_tmpl.html')
 
     # Read fonfiguration file
     config = ConfigParser.ConfigParser()
-    config.read('SimpleBorgWrapper.ini')
+    config.read(script_dir + 'SimpleBorgWrapper.ini')
     borg_bin_path = config.get('Borg', 'borg_bin_path')
     borg_repository = config.get('Borg', 'borg_repository')
     borg_passphrase = config.get('Borg', 'borg_passphrase')
@@ -65,24 +67,24 @@ def main():
 
     # ## BEGIN REPORT ##
     # TODO Add option to disable reports
-    # TODO Add fulltext
-    with open('SimpleBorgWrapper-report.html', 'r') as report_body_template:
+    # TODO Add fulltext mail
+    with open(script_dir + 'SimpleBorgWrapper-report.html', 'r') as report_body_template:
         report_body = report_body_template.read()
-    report_body = report_body.replace('%%SRVNAME%%', server_name)
-    report_body = report_body.replace('%%NICETIME%%', time_started_nice, 1)
-    report_body = report_body.replace('%%STARTTIME%%', time_started, 1)
-    report_body = report_body.replace('%%ENDTIME%%', time_ended, 1)
-    report_body = report_body.replace('%%DURATION%%', strftime('%H:%M:%S', gmtime(time_elapsed)), 1)
-    report_body = report_body.replace('%%ENDRESULT%%', get_rc_result(wrapper_rc), 2)
-    report_body = report_body.replace('%%BCREATE%%', get_rc_result(create_rc), 2)
-    report_body = report_body.replace('%%BCHECK%%', get_rc_result(check_rc), 2)
-    report_body = report_body.replace('%%BPRUNE%%', get_rc_result(prune_rc), 2)
-    report_body = report_body.replace('%%BLIST%%', get_rc_result(list_rc), 2)
+    report_body = report_body.replace('%%SRVNAME%%', server_name, 2)\
+        .replace('%%NICETIME%%', time_started_nice, 1)\
+        .replace('%%STARTTIME%%', time_started, 1)\
+        .replace('%%ENDTIME%%', time_ended, 1)\
+        .replace('%%DURATION%%', strftime('%H:%M:%S', gmtime(time_elapsed)), 1)\
+        .replace('%%ENDRESULT%%', get_rc_result(wrapper_rc), 2)\
+        .replace('%%BCREATE%%', get_rc_result(create_rc), 2)\
+        .replace('%%BCHECK%%', get_rc_result(check_rc), 2)\
+        .replace('%%BPRUNE%%', get_rc_result(prune_rc), 2)\
+        .replace('%%BLIST%%', get_rc_result(list_rc), 2)
     # TODO Improve log formatting: Columns in output are a bit borked.
     report_body = report_body.replace('%%FULL_LOG%%', live_log.replace('\n', '\n<br/>').replace(' ', '&nbsp;'))
     report_from = report_from.replace('%%SRVNAME%%', server_name, 1)
-    report_subject = report_subject.replace('%%ENDRESULT%%', get_rc_result(wrapper_rc), 1)
-    report_subject = report_subject.replace('%%SRVNAME%%', server_name, 1)
+    report_subject = report_subject.replace('%%ENDRESULT%%', get_rc_result(wrapper_rc), 1)\
+        .replace('%%SRVNAME%%', server_name, 1)
     send_report(report_from, report_to, report_subject, report_body, report_smtp)
     # ## END REPORT ##
 
