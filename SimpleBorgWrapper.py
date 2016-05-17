@@ -135,7 +135,8 @@ def borg_list(borg_bin, repo):
 def init_logger(path):
     logger.setLevel(logging.INFO)
     formatter = logging.Formatter('%(asctime)s :: %(levelname)s :: %(message)s')
-    file_handler = TimedRotatingFileHandler(filename=path, when='H', interval=12, backupCount=10)
+    file_handler = TimedRotatingFileHandler(path, when='H', interval=12, backupCount=15)
+    file_handler.doRollover()
     file_handler.setLevel(logging.INFO)
     file_handler.setFormatter(formatter)
     logger.addHandler(file_handler)
