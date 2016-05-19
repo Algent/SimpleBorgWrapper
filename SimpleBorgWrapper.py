@@ -74,7 +74,7 @@ def main():
         report_body_text = 'Backup Report: ' + server_name + '\n' + time_started_nice + ' (' + time_started +\
                            ')\nResult: ' + get_rc_result(wrapper_rc) + '\nBorg create: ' + get_rc_result(create_rc) +\
                            '\nBorg check: ' + get_rc_result(check_rc) + '\nBorg prune: ' + get_rc_result(prune_rc) +\
-                           '\nBorg list: ' + get_rc_result(list_rc) + '\nDetails:' + live_log
+                           '\nBorg list: ' + get_rc_result(list_rc) + '\nDetails:\n' + live_log
         report_from = config.get('Reports', 'report_from')\
             .replace('%%SRVNAME%%', server_name, 1)
         report_to = config.get('Reports', 'report_to')
@@ -192,6 +192,7 @@ def send_report(msg_from, msg_to, msg_subject, msg_body_html, msg_body_text, msg
     msg_text = MIMEText(msg_body_text, 'plain')
     msg_html = MIMEText(msg_body_html, 'html')
     msg.attach(msg_text).attach(msg_html)
+    # TODO add try/except
     server = smtplib.SMTP(msg_smtp)
     server.sendmail(msg_from, shlex.split(msg_to.replace(', ', ' ')), msg.as_string())
     server.quit()
