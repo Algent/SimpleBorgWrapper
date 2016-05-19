@@ -52,15 +52,15 @@ def main():
     # ## END BACKUP ##
 
     # ## BEGIN REPORT ##
-    # TODO Add fulltext mail
     if config.getboolean('Reports', 'report_enable'):
         if not os.path.isfile(script_dir + 'SimpleBorgWrapper-report.html'):
             quit('ERROR: Could not find SimpleBorgWrapper-report.html')
         log_info('Sending report...')
+        # TODO Improve template: CSS is fine in Outlook but not in gmail
         with open(script_dir + 'SimpleBorgWrapper-report.html', 'r') as report_body_template:
-            report_body = report_body_template.read()
+            report_body_html = report_body_template.read()
         # TODO Improve log formatting: Columns in email are a bit borked.
-        report_body = report_body.replace('%%SRVNAME%%', server_name, 2) \
+        report_body_html = report_body_html.replace('%%SRVNAME%%', server_name, 2) \
             .replace('%%NICETIME%%', time_started_nice, 1) \
             .replace('%%STARTTIME%%', time_started, 1) \
             .replace('%%ENDTIME%%', time_ended, 1) \
@@ -71,6 +71,10 @@ def main():
             .replace('%%BPRUNE%%', get_rc_result(prune_rc), 2) \
             .replace('%%BLIST%%', get_rc_result(list_rc), 2)\
             .replace('%%FULL_LOG%%', live_log.replace('\n', '\n<br/>').replace(' ', '&nbsp;'))
+        report_body_text = 'Backup Report: ' + server_name + '\n' + time_started_nice + ' (' + time_started +\
+                           ')\nResult: ' + get_rc_result(wrapper_rc) + '\nBorg create: ' + get_rc_result(create_rc) +\
+                           '\nBorg check: ' + get_rc_result(check_rc) + '\nBorg prune: ' + get_rc_result(prune_rc) +\
+                           '\nBorg list: ' + get_rc_result(list_rc) + '\nDetails:' + live_log
         report_from = config.get('Reports', 'report_from')\
             .replace('%%SRVNAME%%', server_name, 1)
         report_to = config.get('Reports', 'report_to')
@@ -78,7 +82,7 @@ def main():
             .replace('%%ENDRESULT%%', get_rc_result(wrapper_rc), 1)\
             .replace('%%SRVNAME%%', server_name, 1)
         report_smtp = config.get('Reports', 'report_smtp')
-        send_report(report_from, report_to, report_subject, report_body, report_smtp)
+        send_report(report_from, report_to, report_subject, report_body_html, report_body_text, report_smtp)
     # ## END REPORT ##
 
     # ### END MAIN ### #
@@ -179,17 +183,18 @@ def get_rc_result(rc):
         return 'Error'
 
 
-def send_report(msg_from, msg_to, msg_subject, msg_body, msg_smtp):
+def send_report(msg_from, msg_to, msg_subject, msg_body_html, msg_body_text, msg_smtp):
     msg = MIMEMultipart('alternative')
     msg['From'] = msg_from
     msg['To'] = msg_to
     msg['Subject'] = msg_subject
     msg['Date'] = formatdate(localtime=True)
-    msg_body = MIMEText(msg_body, 'html')
-    msg.attach(msg_body)
-    s = smtplib.SMTP(msg_smtp)
-    s.sendmail(msg_from, shlex.split(msg_to.replace(', ', ' ')), msg.as_string())
-    s.quit()
+    msg_text = MIMEText(msg_body_text, 'plain')
+    msg_html = MIMEText(msg_body_html, 'html')
+    msg.attach(msg_text).attach(msg_html)
+    server = smtplib.SMTP(msg_smtp)
+    server.sendmail(msg_from, shlex.split(msg_to.replace(', ', ' ')), msg.as_string())
+    server.quit()
 
 
 if __name__ == '__main__':
