@@ -191,7 +191,8 @@ def send_report(msg_from, msg_to, msg_subject, msg_body_html, msg_body_text, msg
     msg['Date'] = formatdate(localtime=True)
     msg_text = MIMEText(msg_body_text, 'plain')
     msg_html = MIMEText(msg_body_html, 'html')
-    msg.attach(msg_text).attach(msg_html)
+    msg.attach(msg_text)
+    msg.attach(msg_html)
     # TODO add try/except
     server = smtplib.SMTP(msg_smtp)
     server.sendmail(msg_from, shlex.split(msg_to.replace(', ', ' ')), msg.as_string())
