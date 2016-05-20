@@ -194,10 +194,13 @@ def send_report(msg_from, msg_to, msg_subject, msg_body_html, msg_body_text, msg
     msg_html = MIMEText(msg_body_html, 'html')
     msg.attach(msg_text)
     msg.attach(msg_html)
-    # TODO add try/except
-    server = smtplib.SMTP(msg_smtp)
-    server.sendmail(msg_from, shlex.split(msg_to.replace(', ', ' ')), msg.as_string())
-    server.quit()
+    try:
+        server = smtplib.SMTP(msg_smtp)
+        server.sendmail(msg_from, shlex.split(msg_to.replace(', ', ' ')), msg.as_string())
+        server.quit()
+        logger.info('Successfully sent report')
+    except smtplib.SMTPException:
+        logger.error('Unable to send report')
 
 
 if __name__ == '__main__':
