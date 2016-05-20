@@ -12,7 +12,7 @@ from time import strftime, time, gmtime
 from subprocess import Popen, PIPE
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from email.utils import formatdate
+from email.utils import formatdate, make_msgid
 
 
 def main():
@@ -72,9 +72,9 @@ def main():
             .replace('%%BLIST%%', get_rc_result(list_rc), 2)\
             .replace('%%FULL_LOG%%', live_log.replace('\n', '\n<br/>').replace(' ', '&nbsp;'))
         report_body_text = 'Backup Report: ' + server_name + '\n' + time_started_nice + ' (' + time_started +\
-                           ')\nResult: ' + get_rc_result(wrapper_rc) + '\nBorg create: ' + get_rc_result(create_rc) +\
+                           ')\n\nResult: ' + get_rc_result(wrapper_rc) + '\nBorg create: ' + get_rc_result(create_rc) +\
                            '\nBorg check: ' + get_rc_result(check_rc) + '\nBorg prune: ' + get_rc_result(prune_rc) +\
-                           '\nBorg list: ' + get_rc_result(list_rc) + '\nDetails:\n' + live_log
+                           '\nBorg list: ' + get_rc_result(list_rc) + '\n\nDetails:\n' + live_log
         report_from = config.get('Reports', 'report_from')\
             .replace('%%SRVNAME%%', server_name, 1)
         report_to = config.get('Reports', 'report_to')
@@ -189,6 +189,7 @@ def send_report(msg_from, msg_to, msg_subject, msg_body_html, msg_body_text, msg
     msg['To'] = msg_to
     msg['Subject'] = msg_subject
     msg['Date'] = formatdate(localtime=True)
+    msg['Message-Id'] = make_msgid()
     msg_text = MIMEText(msg_body_text, 'plain')
     msg_html = MIMEText(msg_body_html, 'html')
     msg.attach(msg_text)
