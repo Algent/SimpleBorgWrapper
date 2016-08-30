@@ -17,7 +17,7 @@ log_nb_to_keep: 15
 report_enable: true
 report_from: %%SRVNAME%% <email@example.com>
 report_to: email@example.com
-report_subject: Backup of %%SRVNAME%%: %%ENDRESULT%%
+report_subject: [Borg] Backup of %%SRVNAME%%: %%ENDRESULT%%
 report_smtp: <SMTP_IP>
 
 [Misc]
